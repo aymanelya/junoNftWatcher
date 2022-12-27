@@ -4,7 +4,7 @@ const axios = require('axios');
 const { createHash } = require('crypto');
 const {decodeTxRaw, Registry} = require('@cosmjs/proto-signing');
 const { defaultRegistryTypes ,SigningStargateClient} = require("@cosmjs/stargate");
-const {osmosis} = require("osmojs");
+const {cosmwasm} = require("osmojs");
 const mysql = require('mysql');
 
 // const con = mysql.createConnection({
@@ -20,11 +20,12 @@ const mysql = require('mysql');
 
 
 
+
 const ws = new WebSocket(process.env.nodeWS);
 
 const registry = new Registry([
     ...defaultRegistryTypes,
-    // ['/osmosis.gamm.v1beta1.MsgSwapExactAmountIn',osmosis.gamm.v1beta1.MsgSwapExactAmountIn],
+    ['/cosmwasm.wasm.v1.MsgExecuteContract',cosmwasm.wasm.v1.MsgExecuteContract],
 ]);
 
 
@@ -73,8 +74,10 @@ ws.on('message', async function incoming(data) {
 
             decodedTx.body.messages.forEach((msg)=>{
                 if(msg.typeUrl == "/cosmwasm.wasm.v1.MsgExecuteContract"){
-                    const decodedMsg = registry.decode(msg);
+                    let decodedMsg = registry.decode(msg);
+                    decodedMsg.msg = JSON.parse(String.fromCharCode(...decodedMsg.msg))
                     console.log("msg",txHash,JSON.stringify(decodedMsg))
+                    // console.log("type",typeof(decodedMsg.msg),decodedMsg.msg)
                 }
             })
             // console.log(decodedTx.body.messages)
